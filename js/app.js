@@ -38,25 +38,33 @@ let currentUser = null;
 let currentUserDoc = null;
 let currentViewType = null;
 let currentViewUid = null;
+let userLikesSet = new Set(); // хранение ID достижений, лайкнутых пользователем
 
 // ---- Закрытие модалки с обновлением текущего просмотра ----
 function closeModal() {
   modal.style.display = 'none';
-  // Обновляем ленту новых на главной
   loadNewAchievement();
-  // Обновляем текущий просмотр (профиль или топ)
   refreshCurrentView();
 }
 
-// ---- Обновление текущего просмотра ----
 function refreshCurrentView() {
   if (currentViewType === 'profile' && currentViewUid) {
     showUserProfile(currentViewUid);
   } else if (currentViewType === 'top') {
     showTopAchievements();
   }
-  // Если students – обновлять не нужно, там только список имён
-  // Если ничего – просто обновляем ленту (уже вызвано)
+}
+
+// ---- Загрузка лайков текущего пользователя ----
+async function loadUserLikes() {
+  if (!currentUser) return;
+  try {
+    const q = query(collection(db, 'likes'), where('userId', '==', currentUser.uid));
+    const snap = await getDocs(q);
+    userLikesSet = new Set(snap.docs.map(d => d.data().achievementId));
+  } catch (e) {
+    console.error('Ошибка загрузки лайков:', e);
+  }
 }
 
 // ---- Авторизация ----
@@ -82,7 +90,6 @@ loginBtn.addEventListener('click', async () => {
   }
 });
 
-// ---- Регистрация ----
 registerBtn.addEventListener('click', async () => {
   const firstName = document.getElementById('regFirstName').value.trim();
   const lastName = document.getElementById('regLastName').value.trim();
@@ -135,10 +142,12 @@ onAuthStateChanged(auth, async (user) => {
     if (!snap.empty) {
       currentUserDoc = { id: snap.docs[0].id, ...snap.docs[0].data() };
     }
+    await loadUserLikes(); // загружаем лайки
     loadNewAchievement();
   } else {
     currentUser = null;
     currentUserDoc = null;
+    userLikesSet = new Set();
     authContainer.style.display = 'block';
     appContent.style.display = 'none';
     loginForm.style.display = 'block';
@@ -232,6 +241,7 @@ async function loadNewAchievement() {
       console.error('Ошибка получения автора:', e);
     }
 
+    // В карточке лайки не показываем, но если хотите, можно добавить
     newAchievementCard.innerHTML = `
       <div style="text-align:left; width:100%;">
         <h4>${latest.title}</h4>
@@ -251,7 +261,7 @@ async function loadNewAchievement() {
   }
 }
 
-// ---- Модальное окно с новыми достижениями ----
+// ---- Модальное окно с новыми достижениями (с отображением лайка) ----
 async function showNewAchievementsModal(achievements) {
   let currentIndex = 0;
   const total = achievements.length;
@@ -288,6 +298,8 @@ async function showNewAchievementsModal(achievements) {
     const a = achievements[index];
     const dateStr = a.createdAt ? new Date(a.createdAt.seconds * 1000).toLocaleString() : '';
     const author = await getAuthorName(a.userId);
+    const liked = userLikesSet.has(a.id);
+    const likeIcon = liked ? '❤️' : '♡';
 
     modalBody.innerHTML = `
       <div style="text-align:left;">
@@ -301,7 +313,7 @@ async function showNewAchievementsModal(achievements) {
           <button id="viewFullBtn">Подробнее</button>
         </div>
         <div style="margin-top:10px;">
-          <button id="likeFromModal" class="like-btn">❤️ ${a.likesCount || 0}</button>
+          <button id="likeFromModal" class="like-btn">${likeIcon} ${a.likesCount || 0}</button>
         </div>
       </div>
     `;
@@ -357,7 +369,7 @@ async function markAsViewed(achievementId) {
   }
 }
 
-// ---- Полная информация о достижении ----
+// ---- Полная информация о достижении (с отображением лайка) ----
 async function showFullAchievement(achievementId) {
   console.log('showFullAchievement вызвана с ID:', achievementId);
   try {
@@ -372,6 +384,8 @@ async function showFullAchievement(achievementId) {
     const userSnap = await getDocs(userQuery);
     const authorName = userSnap.empty ? 'Неизвестно' : (userSnap.docs[0].data().fullName || userSnap.docs[0].data().firstName || 'Неизвестно');
     const isAuthor = currentUser && a.userId === currentUser.uid;
+    const liked = userLikesSet.has(achievementId);
+    const likeIcon = liked ? '❤️' : '♡';
 
     markAsViewed(achievementId);
 
@@ -383,7 +397,7 @@ async function showFullAchievement(achievementId) {
         <p><strong>Дата:</strong> ${a.createdAt ? new Date(a.createdAt.seconds * 1000).toLocaleString() : ''}</p>
         <p><strong>Описание:</strong> ${a.description || ''}</p>
         <div style="margin-top:15px;">
-          <button id="likeFullBtn" class="like-btn">❤️ ${a.likesCount || 0}</button>
+          <button id="likeFullBtn" class="like-btn">${likeIcon} ${a.likesCount || 0}</button>
           ${isAuthor ? `<button id="deleteFullBtn" style="margin-left:10px;background:red;color:white;border:none;padding:5px 15px;border-radius:6px;cursor:pointer;">Удалить</button>` : ''}
         </div>
         <div style="margin-top:15px;">
@@ -395,7 +409,7 @@ async function showFullAchievement(achievementId) {
 
     document.getElementById('likeFullBtn')?.addEventListener('click', async () => {
       await toggleLike(achievementId);
-      // После лайка перерисовываем модалку, чтобы обновить счётчик
+      // обновляем модалку и текущий просмотр после изменения лайка
       showFullAchievement(achievementId);
     });
 
@@ -407,7 +421,6 @@ async function showFullAchievement(achievementId) {
           });
           alert('Достижение удалено');
           closeModal();
-          // после удаления обновляем ленту и текущий просмотр
           loadNewAchievement();
           refreshCurrentView();
         } catch (e) {
@@ -425,7 +438,7 @@ async function showFullAchievement(achievementId) {
   }
 }
 
-// ---- Лайк ----
+// ---- Лайк (обновляет Set) ----
 async function toggleLike(achievementId) {
   if (!currentUser) return;
   try {
@@ -453,9 +466,11 @@ async function toggleLike(achievementId) {
         createdAt: serverTimestamp()
       });
       await updateDoc(achRef, { likesCount: currentLikes + 1 });
+      userLikesSet.add(achievementId);
     } else {
       await deleteDoc(doc(db, 'likes', snap.docs[0].id));
       await updateDoc(achRef, { likesCount: Math.max(0, currentLikes - 1) });
+      userLikesSet.delete(achievementId);
     }
   } catch (e) {
     console.error('Ошибка лайка:', e);
@@ -481,7 +496,7 @@ async function showStudents() {
   }
 }
 
-// ---- Профиль ученика ----
+// ---- Профиль ученика (с отображением лайка) ----
 async function showUserProfile(uid) {
   currentViewType = 'profile';
   currentViewUid = uid;
@@ -517,13 +532,17 @@ async function showUserProfile(uid) {
         <button id="sortLikesBtn">По популярности</button>
       </div>
       <div id="achievementsList">
-        ${achievements.map(a => `
-          <div class="achievement-item" data-id="${a.id}" style="cursor:pointer; padding:10px; border-bottom:1px solid #eee;">
-            <h4>${a.title}</h4>
-            <p><strong>Категория:</strong> ${a.category || 'без категории'}</p>
-            <small>❤️ ${a.likesCount || 0}</small>
-          </div>
-        `).join('')}
+        ${achievements.map(a => {
+      const liked = userLikesSet.has(a.id);
+      const likeIcon = liked ? '❤️' : '♡';
+      return `
+            <div class="achievement-item" data-id="${a.id}" style="cursor:pointer; padding:10px; border-bottom:1px solid #eee;">
+              <h4>${a.title}</h4>
+              <p><strong>Категория:</strong> ${a.category || 'без категории'}</p>
+              <small><span class="like-icon">${likeIcon}</span> ${a.likesCount || 0}</small>
+            </div>
+          `;
+    }).join('')}
       </div>
     `;
     pageContainer.innerHTML = html;
@@ -546,16 +565,20 @@ async function showUserProfile(uid) {
 function renderAchievementsList(achievements) {
   const container = document.getElementById('achievementsList');
   if (!container) return;
-  container.innerHTML = achievements.map(a => `
-    <div class="achievement-item" data-id="${a.id}" style="cursor:pointer; padding:10px; border-bottom:1px solid #eee;">
-      <h4>${a.title}</h4>
-      <p><strong>Категория:</strong> ${a.category || 'без категории'}</p>
-      <small>❤️ ${a.likesCount || 0}</small>
-    </div>
-  `).join('');
+  container.innerHTML = achievements.map(a => {
+    const liked = userLikesSet.has(a.id);
+    const likeIcon = liked ? '❤️' : '♡';
+    return `
+      <div class="achievement-item" data-id="${a.id}" style="cursor:pointer; padding:10px; border-bottom:1px solid #eee;">
+        <h4>${a.title}</h4>
+        <p><strong>Категория:</strong> ${a.category || 'без категории'}</p>
+        <small><span class="like-icon">${likeIcon}</span> ${a.likesCount || 0}</small>
+      </div>
+    `;
+  }).join('');
 }
 
-// ---- Топ-10 достижений ----
+// ---- Топ-10 достижений (с отображением лайка) ----
 async function showTopAchievements() {
   currentViewType = 'top';
   currentViewUid = null;
@@ -590,7 +613,9 @@ async function showTopAchievements() {
 
     const topWithAuthors = await Promise.all(top10.map(async (a) => {
       const author = await getAuthorName(a.userId);
-      return { ...a, author };
+      const liked = userLikesSet.has(a.id);
+      const likeIcon = liked ? '❤️' : '♡';
+      return { ...a, author, likeIcon };
     }));
 
     let html = '<h2>Топ-10 достижений</h2>';
@@ -600,7 +625,7 @@ async function showTopAchievements() {
         <h4>${a.title}</h4>
         <p><strong>Категория:</strong> ${a.category || 'без категории'}</p>
         <p><strong>Автор:</strong> ${a.author}</p>
-        <small>❤️ ${a.likesCount || 0}</small>
+        <small><span class="like-icon">${a.likeIcon}</span> ${a.likesCount || 0}</small>
       </div>`;
     });
     html += '</div>';
@@ -696,12 +721,11 @@ showStatisticsLink.addEventListener('click', (e) => {
   showStatistics();
 });
 
-// ---- Закрытие модалки (через крестик) ----
+// ---- Закрытие модалки ----
 modalClose.addEventListener('click', () => {
   closeModal();
 });
 
-// ---- Закрытие модалки (клик вне окна) ----
 window.addEventListener('click', (e) => {
   if (e.target === modal) {
     closeModal();
