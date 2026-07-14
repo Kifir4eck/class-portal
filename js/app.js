@@ -29,6 +29,7 @@ const pageContainer = document.getElementById('pageContainer');
 const modal = document.getElementById('modal');
 const modalBody = document.getElementById('modalBody');
 const modalClose = document.querySelector('.modal-close');
+const showProfileLink = document.getElementById('showProfileLink');
 const showStudentsLink = document.getElementById('showStudentsLink');
 const showTopLink = document.getElementById('showTopLink');
 const showStatisticsLink = document.getElementById('showStatisticsLink');
@@ -76,7 +77,7 @@ loginBtn.addEventListener('click', async () => {
   }
 });
 
-// ---- ОБНОВЛЁННАЯ РЕГИСТРАЦИЯ (имя, фамилия, возраст) ----
+// ---- Регистрация (имя, фамилия, возраст) ----
 registerBtn.addEventListener('click', async () => {
   const firstName = document.getElementById('regFirstName').value.trim();
   const lastName = document.getElementById('regLastName').value.trim();
@@ -85,7 +86,6 @@ registerBtn.addEventListener('click', async () => {
   const className = document.getElementById('regClass').value.trim();
   const age = document.getElementById('regAge').value.trim();
 
-  // Проверка обязательных полей (фамилия теперь тоже обязательна)
   if (!firstName || !lastName || !email || !password || !className) {
     alert('Заполните все обязательные поля (Имя, Фамилия, Email, Пароль, Класс)');
     return;
@@ -666,7 +666,16 @@ async function showStatistics() {
   });
 }
 
-// ---- Навигация ----
+// ---- НАВИГАЦИЯ ----
+showProfileLink.addEventListener('click', (e) => {
+  e.preventDefault();
+  if (currentUser) {
+    showUserProfile(currentUser.uid);
+  } else {
+    alert('Вы не авторизованы');
+  }
+});
+
 showStudentsLink.addEventListener('click', (e) => {
   e.preventDefault();
   showStudents();

@@ -10,15 +10,18 @@
 
 <body>
 
+  <!-- Шапка с "7 «В» класс" по центру -->
   <header class="header">
     <div class="header__container">
       <div class="header__title">7 «В» класс</div>
     </div>
   </header>
 
+  <!-- Основной контент -->
   <main class="main" id="app">
     <h1 class="main__heading">Достижения</h1>
 
+    <!-- Контейнер для авторизации -->
     <div id="authContainer">
       <div id="loginForm">
         <h2>Вход</h2>
@@ -40,9 +43,12 @@
       </div>
     </div>
 
+    <!-- Основное приложение (показывается после входа) -->
     <div id="appContent" style="display:none;">
+      <!-- Кнопка добавления достижения -->
       <button id="showAddAchievementBtn" class="btn-primary">➕ Добавить достижение</button>
 
+      <!-- Форма добавления достижения -->
       <div id="addAchievementForm"
         style="display:none; margin-top:20px; background:#f5f5f5; padding:20px; border-radius:8px;">
         <h3>Новое достижение</h3>
@@ -61,23 +67,29 @@
         <button id="cancelAddAchievementBtn">Отмена</button>
       </div>
 
+      <!-- Лента новых достижений -->
       <section class="feed">
         <h2 class="feed__label">Лента новых достижений</h2>
         <div class="feed__card" id="newAchievementCard">
           <div class="feed__card-placeholder">Загрузка...</div>
         </div>
         <div class="feed__links">
+          <a href="#" id="showProfileLink" class="feed__link">Мой профиль</a>
           <a href="#" id="showStudentsLink" class="feed__link">Список учеников</a>
           <a href="#" id="showTopLink" class="feed__link">Лучшие достижения</a>
           <a href="#" id="showStatisticsLink" class="feed__link">Статистика (учитель)</a>
         </div>
       </section>
 
+      <!-- Контейнер для страниц -->
       <div id="pageContainer"></div>
+
+      <!-- Кнопка выхода -->
       <button id="logoutBtn" style="margin-top:30px;">Выйти</button>
     </div>
   </main>
 
+  <!-- Модальное окно -->
   <div id="modal" class="modal">
     <div class="modal-content">
       <span class="modal-close">&times;</span>
