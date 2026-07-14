@@ -39,19 +39,24 @@ let currentUserDoc = null;
 let currentViewType = null;
 let currentViewUid = null;
 
-// ---- Закрытие модалки ----
+// ---- Закрытие модалки с обновлением текущего просмотра ----
 function closeModal() {
   modal.style.display = 'none';
+  // Обновляем ленту новых на главной
+  loadNewAchievement();
+  // Обновляем текущий просмотр (профиль или топ)
+  refreshCurrentView();
 }
 
-// ---- Обновление после удаления ----
-async function refreshAfterDelete() {
-  await loadNewAchievement();
+// ---- Обновление текущего просмотра ----
+function refreshCurrentView() {
   if (currentViewType === 'profile' && currentViewUid) {
-    await showUserProfile(currentViewUid);
+    showUserProfile(currentViewUid);
   } else if (currentViewType === 'top') {
-    await showTopAchievements();
+    showTopAchievements();
   }
+  // Если students – обновлять не нужно, там только список имён
+  // Если ничего – просто обновляем ленту (уже вызвано)
 }
 
 // ---- Авторизация ----
@@ -77,7 +82,7 @@ loginBtn.addEventListener('click', async () => {
   }
 });
 
-// ---- Регистрация (имя, фамилия, возраст) ----
+// ---- Регистрация ----
 registerBtn.addEventListener('click', async () => {
   const firstName = document.getElementById('regFirstName').value.trim();
   const lastName = document.getElementById('regLastName').value.trim();
@@ -390,6 +395,7 @@ async function showFullAchievement(achievementId) {
 
     document.getElementById('likeFullBtn')?.addEventListener('click', async () => {
       await toggleLike(achievementId);
+      // После лайка перерисовываем модалку, чтобы обновить счётчик
       showFullAchievement(achievementId);
     });
 
@@ -401,7 +407,9 @@ async function showFullAchievement(achievementId) {
           });
           alert('Достижение удалено');
           closeModal();
-          await refreshAfterDelete();
+          // после удаления обновляем ленту и текущий просмотр
+          loadNewAchievement();
+          refreshCurrentView();
         } catch (e) {
           alert('Ошибка удаления: ' + e.message);
         }
@@ -410,7 +418,6 @@ async function showFullAchievement(achievementId) {
 
     document.getElementById('closeFullBtn')?.addEventListener('click', () => {
       closeModal();
-      loadNewAchievement();
     });
   } catch (e) {
     console.error('Ошибка в showFullAchievement:', e);
@@ -689,15 +696,15 @@ showStatisticsLink.addEventListener('click', (e) => {
   showStatistics();
 });
 
-// ---- Закрытие модалки ----
+// ---- Закрытие модалки (через крестик) ----
 modalClose.addEventListener('click', () => {
   closeModal();
-  loadNewAchievement();
 });
+
+// ---- Закрытие модалки (клик вне окна) ----
 window.addEventListener('click', (e) => {
   if (e.target === modal) {
     closeModal();
-    loadNewAchievement();
   }
 });
 
