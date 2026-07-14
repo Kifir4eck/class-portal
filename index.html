@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="ru">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>7 «В» — Достижения</title>
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+
+<body>
+
+  <header class="header">
+    <div class="header__container">
+      <div class="header__title">7 «В» класс</div>
+    </div>
+  </header>
+
+  <main class="main" id="app">
+    <h1 class="main__heading">Достижения</h1>
+
+    <div id="authContainer">
+      <div id="loginForm">
+        <h2>Вход</h2>
+        <input type="email" id="loginEmail" placeholder="Email" />
+        <input type="password" id="loginPassword" placeholder="Пароль" />
+        <button id="loginBtn">Войти</button>
+        <p>Нет аккаунта? <a href="#" id="showRegister">Зарегистрироваться</a></p>
+      </div>
+      <div id="registerForm" style="display:none;">
+        <h2>Регистрация</h2>
+        <input type="text" id="regFirstName" placeholder="Имя" required />
+        <input type="text" id="regLastName" placeholder="Фамилия" required />
+        <input type="email" id="regEmail" placeholder="Email" required />
+        <input type="password" id="regPassword" placeholder="Пароль (минимум 6 символов)" required />
+        <input type="text" id="regClass" placeholder="Класс (например, 7В)" required />
+        <input type="number" id="regAge" placeholder="Возраст (необязательно)" min="5" max="20" />
+        <button id="registerBtn">Зарегистрироваться</button>
+        <p>Уже есть аккаунт? <a href="#" id="showLogin">Войти</a></p>
+      </div>
+    </div>
+
+    <div id="appContent" style="display:none;">
+      <button id="showAddAchievementBtn" class="btn-primary">➕ Добавить достижение</button>
+
+      <div id="addAchievementForm"
+        style="display:none; margin-top:20px; background:#f5f5f5; padding:20px; border-radius:8px;">
+        <h3>Новое достижение</h3>
+        <input type="text" id="achTitle" placeholder="Название" />
+        <select id="achCategory">
+          <option value="учёба">Учёба</option>
+          <option value="спорт">Спорт</option>
+          <option value="проекты">Проекты</option>
+          <option value="олимпиады">Олимпиады</option>
+          <option value="творчество">Творчество</option>
+        </select>
+        <textarea id="achDescription"
+          placeholder="Описание. Ссылки на фото можно вставить сюда (Google Диск, Яндекс Диск и т.п.)"
+          rows="4"></textarea>
+        <button id="submitAchievementBtn">Опубликовать</button>
+        <button id="cancelAddAchievementBtn">Отмена</button>
+      </div>
+
+      <section class="feed">
+        <h2 class="feed__label">Лента новых достижений</h2>
+        <div class="feed__card" id="newAchievementCard">
+          <div class="feed__card-placeholder">Загрузка...</div>
+        </div>
+        <div class="feed__links">
+          <a href="#" id="showStudentsLink" class="feed__link">Список учеников</a>
+          <a href="#" id="showTopLink" class="feed__link">Лучшие достижения</a>
+          <a href="#" id="showStatisticsLink" class="feed__link">Статистика (учитель)</a>
+        </div>
+      </section>
+
+      <div id="pageContainer"></div>
+      <button id="logoutBtn" style="margin-top:30px;">Выйти</button>
+    </div>
+  </main>
+
+  <div id="modal" class="modal">
+    <div class="modal-content">
+      <span class="modal-close">&times;</span>
+      <div id="modalBody"></div>
+    </div>
+  </div>
+
+  <script type="module" src="js/firebase-config.js"></script>
+  <script type="module" src="js/app.js"></script>
+</body>
+
+</html>

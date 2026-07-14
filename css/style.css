@@ -1,0 +1,312 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: Arial, sans-serif;
+}
+
+body {
+  background: #fff;
+}
+
+.header {
+  background: #800020;
+  padding: 15px 20px;
+}
+
+.header__container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.header__title {
+  color: #FFD700;
+  font-size: 2rem;
+  font-weight: bold;
+  letter-spacing: 2px;
+}
+
+.main {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 20px;
+  position: relative;
+}
+
+/* Верхняя строка с именем и заголовком */
+.main-header {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 20px;
+  min-height: 60px;
+  /* чтобы имя и заголовок не наползали друг на друга */
+}
+
+.user-name {
+  position: absolute;
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #333;
+  font-size: 1.2rem;
+  font-weight: bold;
+  padding: 5px 15px 5px 0;
+  border-radius: 5px;
+  transition: background 0.2s;
+  cursor: pointer;
+  white-space: nowrap;
+  z-index: 1;
+}
+
+.user-name:hover {
+  background: #f0f0f0;
+}
+
+.main__heading {
+  color: #800020;
+  font-size: 2.2rem;
+  text-align: center;
+  border-bottom: 2px solid #800020;
+  padding-bottom: 10px;
+  margin: 0;
+}
+
+.feed__label {
+  font-size: 1.4rem;
+  margin-bottom: 15px;
+  color: #333;
+}
+
+.feed__card {
+  background: #f9f9f9;
+  border: 1px solid #ddd;
+  border-radius: 12px;
+  padding: 20px;
+  min-height: 200px;
+  cursor: pointer;
+  transition: box-shadow 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+}
+
+.feed__card:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.feed__card-placeholder {
+  color: #888;
+  font-size: 1.1rem;
+}
+
+.feed__links {
+  margin-top: 30px;
+  display: flex;
+  justify-content: space-around;
+  gap: 20px;
+  flex-wrap: wrap;
+}
+
+.feed__link {
+  color: #800020;
+  font-size: 1.1rem;
+  font-weight: bold;
+  text-decoration: none;
+  border-bottom: 2px solid transparent;
+  transition: border-color 0.2s;
+  cursor: pointer;
+}
+
+.feed__link:hover {
+  border-bottom-color: #800020;
+}
+
+.btn-primary {
+  background: #800020;
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 8px;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.btn-primary:hover {
+  background: #a0002a;
+}
+
+#authContainer {
+  max-width: 400px;
+  margin: 0 auto 30px;
+  background: #f5f5f5;
+  padding: 30px;
+  border-radius: 12px;
+}
+
+#authContainer input {
+  width: 100%;
+  padding: 10px;
+  margin: 8px 0;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+}
+
+#authContainer button {
+  width: 100%;
+  padding: 10px;
+  background: #800020;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-size: 1rem;
+  cursor: pointer;
+}
+
+#authContainer button:hover {
+  background: #a0002a;
+}
+
+#authContainer a {
+  color: #800020;
+  cursor: pointer;
+}
+
+#addAchievementForm input,
+#addAchievementForm select,
+#addAchievementForm textarea {
+  width: 100%;
+  padding: 8px;
+  margin: 6px 0;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+}
+
+#addAchievementForm button {
+  padding: 8px 16px;
+  margin: 6px 6px 0 0;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+#addAchievementForm button:first-of-type {
+  background: #800020;
+  color: white;
+}
+
+#addAchievementForm button:last-of-type {
+  background: #ccc;
+}
+
+.modal {
+  display: none;
+  position: fixed;
+  z-index: 1000;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.6);
+}
+
+.modal-content {
+  background: white;
+  margin: 5% auto;
+  padding: 30px;
+  max-width: 700px;
+  border-radius: 12px;
+  max-height: 80%;
+  overflow-y: auto;
+  position: relative;
+}
+
+.modal-close {
+  position: absolute;
+  right: 20px;
+  top: 15px;
+  font-size: 2rem;
+  cursor: pointer;
+}
+
+.achievement-item {
+  border-bottom: 1px solid #eee;
+  padding: 15px 0;
+  cursor: pointer;
+}
+
+.achievement-item:hover {
+  background: #f9f9f9;
+}
+
+.achievement-item h4 {
+  color: #800020;
+}
+
+.achievement-item small {
+  color: #888;
+}
+
+.like-btn {
+  background: none;
+  border: none;
+  color: #800020;
+  font-size: 1.2rem;
+  cursor: pointer;
+}
+
+.like-btn:hover {
+  transform: scale(1.1);
+}
+
+.user-card {
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  padding: 15px;
+  margin: 10px 0;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.user-card:hover {
+  background: #f5f5f5;
+}
+
+.stat-block {
+  background: #f5f5f5;
+  padding: 20px;
+  border-radius: 8px;
+  margin: 20px 0;
+}
+
+.stat-block select,
+.stat-block input {
+  padding: 8px;
+  margin: 5px;
+  border-radius: 6px;
+  border: 1px solid #ccc;
+}
+
+/* Принудительное выравнивание имени пользователя (переопределение) */
+.user-name {
+  position: absolute !important;
+  left: 0 !important;
+  top: 50% !important;
+  transform: translateY(-50%) !important;
+  margin-left: 0 !important;
+  padding-left: 0 !important;
+  display: block !important;
+}
+
+.main-header {
+  position: relative !important;
+  display: flex !important;
+  justify-content: center !important;
+  align-items: center !important;
+}
