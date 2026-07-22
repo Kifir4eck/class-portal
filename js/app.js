@@ -34,11 +34,30 @@ const showStudentsLink = document.getElementById('showStudentsLink');
 const showTopLink = document.getElementById('showTopLink');
 const showStatisticsLink = document.getElementById('showStatisticsLink');
 
+// Элементы, которые скрываем при открытии страниц
+const feedSection = document.querySelector('.feed');
+const addBtn = document.getElementById('showAddAchievementBtn');
+
 let currentUser = null;
 let currentUserDoc = null;
 let currentViewType = null;
 let currentViewUid = null;
 let userLikesSet = new Set();
+
+// ---- Управление видимостью главного содержимого ----
+function hideMainContent() {
+  if (feedSection) feedSection.style.display = 'none';
+  if (addBtn) addBtn.style.display = 'none';
+}
+
+function showMainContent() {
+  if (feedSection) feedSection.style.display = 'block';
+  if (addBtn) addBtn.style.display = 'block';
+  // Очищаем pageContainer, возвращаем главную
+  pageContainer.innerHTML = '';
+  currentViewType = null;
+  currentViewUid = null;
+}
 
 // ---- Закрытие модалки ----
 function closeModal() {
@@ -144,6 +163,8 @@ onAuthStateChanged(auth, async (user) => {
       currentUserDoc = { id: snap.docs[0].id, ...snap.docs[0].data() };
     }
     await loadUserLikes();
+    // Показываем главную (ленту)
+    showMainContent();
     loadNewAchievement();
   } else {
     currentUser = null;
@@ -476,10 +497,11 @@ async function toggleLike(achievementId) {
   }
 }
 
-// ---- Список учеников ----
+// ---- Список учеников (с полноэкранным режимом) ----
 async function showStudents() {
   currentViewType = 'students';
   currentViewUid = null;
+  hideMainContent();
   try {
     const q = query(collection(db, 'users'), where('role', '==', 'student'));
     const snap = await getDocs(q);
@@ -489,16 +511,22 @@ async function showStudents() {
       const displayName = u.fullName || u.firstName || 'Без имени';
       html += `<div class="user-card" data-uid="${u.uid}">${displayName} (${u.class})</div>`;
     });
+    html += `<div style="margin-top:30px;"><button id="backToMainBtn" class="btn-primary">На главную</button></div>`;
     pageContainer.innerHTML = html;
+    document.getElementById('backToMainBtn')?.addEventListener('click', () => {
+      showMainContent();
+      loadNewAchievement();
+    });
   } catch (e) {
     pageContainer.innerHTML = 'Ошибка загрузки';
   }
 }
 
-// ---- Профиль ученика ----
+// ---- Профиль ученика (с полноэкранным режимом) ----
 async function showUserProfile(uid) {
   currentViewType = 'profile';
   currentViewUid = uid;
+  hideMainContent();
   try {
     const q = query(collection(db, 'users'), where('uid', '==', uid));
     const snap = await getDocs(q);
@@ -543,6 +571,7 @@ async function showUserProfile(uid) {
           `;
     }).join('')}
       </div>
+      <div style="margin-top:30px;"><button id="backToMainBtn" class="btn-primary">На главную</button></div>
     `;
     pageContainer.innerHTML = html;
 
@@ -553,6 +582,11 @@ async function showUserProfile(uid) {
     document.getElementById('sortLikesBtn')?.addEventListener('click', () => {
       achievements.sort((a, b) => (b.likesCount || 0) - (a.likesCount || 0));
       renderAchievementsList(achievements);
+    });
+
+    document.getElementById('backToMainBtn')?.addEventListener('click', () => {
+      showMainContent();
+      loadNewAchievement();
     });
 
   } catch (e) {
@@ -577,10 +611,11 @@ function renderAchievementsList(achievements) {
   }).join('');
 }
 
-// ---- Топ-10 достижений ----
+// ---- Топ-10 достижений (с полноэкранным режимом) ----
 async function showTopAchievements() {
   currentViewType = 'top';
   currentViewUid = null;
+  hideMainContent();
   try {
     const authorCache = {};
     async function getAuthorName(userId) {
@@ -628,18 +663,27 @@ async function showTopAchievements() {
       </div>`;
     });
     html += '</div>';
+    html += `<div style="margin-top:30px;"><button id="backToMainBtn" class="btn-primary">На главную</button></div>`;
     pageContainer.innerHTML = html;
+    document.getElementById('backToMainBtn')?.addEventListener('click', () => {
+      showMainContent();
+      loadNewAchievement();
+    });
   } catch (e) {
     pageContainer.innerHTML = 'Ошибка загрузки топа';
   }
 }
 
-// ---- Статистика для учителя ----
+// ---- Статистика для учителя (с полноэкранным режимом) ----
 async function showStatistics() {
   if (!currentUserDoc || currentUserDoc.role !== 'teacher') {
     pageContainer.innerHTML = '<p>Доступно только учителям.</p>';
     return;
   }
+  currentViewType = 'statistics';
+  currentViewUid = null;
+  hideMainContent();
+
   pageContainer.innerHTML = `
     <h2>Статистика</h2>
     <div class="stat-block">
@@ -649,7 +693,13 @@ async function showStatistics() {
       <button id="getStatBtn">Показать</button>
     </div>
     <div id="statResult"></div>
+    <div style="margin-top:30px;"><button id="backToMainBtn" class="btn-primary">На главную</button></div>
   `;
+
+  document.getElementById('backToMainBtn')?.addEventListener('click', () => {
+    showMainContent();
+    loadNewAchievement();
+  });
 
   document.getElementById('getStatBtn').addEventListener('click', async () => {
     const className = document.getElementById('statClass').value;
