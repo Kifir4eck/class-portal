@@ -38,9 +38,9 @@ let currentUser = null;
 let currentUserDoc = null;
 let currentViewType = null;
 let currentViewUid = null;
-let userLikesSet = new Set(); // хранение ID достижений, лайкнутых пользователем
+let userLikesSet = new Set();
 
-// ---- Закрытие модалки с обновлением текущего просмотра ----
+// ---- Закрытие модалки ----
 function closeModal() {
   modal.style.display = 'none';
   loadNewAchievement();
@@ -55,7 +55,7 @@ function refreshCurrentView() {
   }
 }
 
-// ---- Загрузка лайков текущего пользователя ----
+// ---- Загрузка лайков ----
 async function loadUserLikes() {
   if (!currentUser) return;
   try {
@@ -64,6 +64,7 @@ async function loadUserLikes() {
     userLikesSet = new Set(snap.docs.map(d => d.data().achievementId));
   } catch (e) {
     console.error('Ошибка загрузки лайков:', e);
+    userLikesSet = new Set();
   }
 }
 
@@ -142,7 +143,7 @@ onAuthStateChanged(auth, async (user) => {
     if (!snap.empty) {
       currentUserDoc = { id: snap.docs[0].id, ...snap.docs[0].data() };
     }
-    await loadUserLikes(); // загружаем лайки
+    await loadUserLikes();
     loadNewAchievement();
   } else {
     currentUser = null;
@@ -241,7 +242,6 @@ async function loadNewAchievement() {
       console.error('Ошибка получения автора:', e);
     }
 
-    // В карточке лайки не показываем, но если хотите, можно добавить
     newAchievementCard.innerHTML = `
       <div style="text-align:left; width:100%;">
         <h4>${latest.title}</h4>
@@ -261,7 +261,7 @@ async function loadNewAchievement() {
   }
 }
 
-// ---- Модальное окно с новыми достижениями (с отображением лайка) ----
+// ---- Модальное окно с новыми достижениями ----
 async function showNewAchievementsModal(achievements) {
   let currentIndex = 0;
   const total = achievements.length;
@@ -369,7 +369,7 @@ async function markAsViewed(achievementId) {
   }
 }
 
-// ---- Полная информация о достижении (с отображением лайка) ----
+// ---- Полная информация о достижении ----
 async function showFullAchievement(achievementId) {
   console.log('showFullAchievement вызвана с ID:', achievementId);
   try {
@@ -409,7 +409,6 @@ async function showFullAchievement(achievementId) {
 
     document.getElementById('likeFullBtn')?.addEventListener('click', async () => {
       await toggleLike(achievementId);
-      // обновляем модалку и текущий просмотр после изменения лайка
       showFullAchievement(achievementId);
     });
 
@@ -438,7 +437,7 @@ async function showFullAchievement(achievementId) {
   }
 }
 
-// ---- Лайк (обновляет Set) ----
+// ---- Лайк ----
 async function toggleLike(achievementId) {
   if (!currentUser) return;
   try {
@@ -496,7 +495,7 @@ async function showStudents() {
   }
 }
 
-// ---- Профиль ученика (с отображением лайка) ----
+// ---- Профиль ученика ----
 async function showUserProfile(uid) {
   currentViewType = 'profile';
   currentViewUid = uid;
@@ -578,7 +577,7 @@ function renderAchievementsList(achievements) {
   }).join('');
 }
 
-// ---- Топ-10 достижений (с отображением лайка) ----
+// ---- Топ-10 достижений ----
 async function showTopAchievements() {
   currentViewType = 'top';
   currentViewUid = null;
