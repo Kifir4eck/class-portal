@@ -516,7 +516,8 @@ async function showUserProfile(uid) {
     let addButtonHtml = '';
     let addFormHtml = '';
     if (isOwnProfile) {
-      addButtonHtml = `<button id="showAddAchievementBtn" class="btn-primary" style="margin-bottom:15px;">➕ Добавить достижение</button>`;
+      // ✅ Изменённая кнопка: убран плюс, текст жёлтый
+      addButtonHtml = `<button id="showAddAchievementBtn" style="margin-bottom:15px; background:#800020; color:#FFD700; border:none; padding:10px 20px; border-radius:8px; cursor:pointer; font-size:1rem; font-weight:bold;">Добавить достижение</button>`;
       addFormHtml = `
         <div id="addAchievementForm" style="display:none; margin-top:10px; background:#f5f5f5; padding:20px; border-radius:8px;">
           <h4>Новое достижение</h4>
