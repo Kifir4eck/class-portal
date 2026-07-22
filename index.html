@@ -10,7 +10,7 @@
 
 <body>
 
-  <!-- Шапка с "7 «В» класс" по центру -->
+  <!-- Шапка -->
   <header class="header">
     <div class="header__container">
       <div class="header__title">7 «В» класс</div>
@@ -21,7 +21,7 @@
   <main class="main" id="app">
     <h1 class="main__heading">Достижения</h1>
 
-    <!-- Контейнер для авторизации -->
+    <!-- Авторизация -->
     <div id="authContainer">
       <div id="loginForm">
         <h2>Вход</h2>
@@ -43,48 +43,48 @@
       </div>
     </div>
 
-    <!-- Основное приложение (показывается после входа) -->
+    <!-- Основное приложение (после входа) -->
     <div id="appContent" style="display:none;">
-      <!-- Кнопка добавления достижения -->
-      <button id="showAddAchievementBtn" class="btn-primary">➕ Добавить достижение</button>
+      <!-- Главная лента и кнопки (обёрнуты для скрытия) -->
+      <div id="mainFeed">
+        <button id="showAddAchievementBtn" class="btn-primary">➕ Добавить достижение</button>
 
-      <!-- Форма добавления достижения -->
-      <div id="addAchievementForm"
-        style="display:none; margin-top:20px; background:#f5f5f5; padding:20px; border-radius:8px;">
-        <h3>Новое достижение</h3>
-        <input type="text" id="achTitle" placeholder="Название" />
-        <select id="achCategory">
-          <option value="учёба">Учёба</option>
-          <option value="спорт">Спорт</option>
-          <option value="проекты">Проекты</option>
-          <option value="олимпиады">Олимпиады</option>
-          <option value="творчество">Творчество</option>
-        </select>
-        <textarea id="achDescription"
-          placeholder="Описание. Ссылки на фото можно вставить сюда (Google Диск, Яндекс Диск и т.п.)"
-          rows="4"></textarea>
-        <button id="submitAchievementBtn">Опубликовать</button>
-        <button id="cancelAddAchievementBtn">Отмена</button>
+        <div id="addAchievementForm"
+          style="display:none; margin-top:20px; background:#f5f5f5; padding:20px; border-radius:8px;">
+          <h3>Новое достижение</h3>
+          <input type="text" id="achTitle" placeholder="Название" />
+          <select id="achCategory">
+            <option value="учёба">Учёба</option>
+            <option value="спорт">Спорт</option>
+            <option value="проекты">Проекты</option>
+            <option value="олимпиады">Олимпиады</option>
+            <option value="творчество">Творчество</option>
+          </select>
+          <textarea id="achDescription"
+            placeholder="Описание. Ссылки на фото можно вставить сюда (Google Диск, Яндекс Диск и т.п.)"
+            rows="4"></textarea>
+          <button id="submitAchievementBtn">Опубликовать</button>
+          <button id="cancelAddAchievementBtn">Отмена</button>
+        </div>
+
+        <section class="feed">
+          <h2 class="feed__label">Лента новых достижений</h2>
+          <div class="feed__card" id="newAchievementCard">
+            <div class="feed__card-placeholder">Загрузка...</div>
+          </div>
+          <div class="feed__links">
+            <a href="#" id="showProfileLink" class="feed__link">Мой профиль</a>
+            <a href="#" id="showStudentsLink" class="feed__link">Список учеников</a>
+            <a href="#" id="showTopLink" class="feed__link">Лучшие достижения</a>
+            <a href="#" id="showStatisticsLink" class="feed__link">Статистика (учитель)</a>
+          </div>
+        </section>
       </div>
 
-      <!-- Лента новых достижений -->
-      <section class="feed">
-        <h2 class="feed__label">Лента новых достижений</h2>
-        <div class="feed__card" id="newAchievementCard">
-          <div class="feed__card-placeholder">Загрузка...</div>
-        </div>
-        <div class="feed__links">
-          <a href="#" id="showProfileLink" class="feed__link">Мой профиль</a>
-          <a href="#" id="showStudentsLink" class="feed__link">Список учеников</a>
-          <a href="#" id="showTopLink" class="feed__link">Лучшие достижения</a>
-          <a href="#" id="showStatisticsLink" class="feed__link">Статистика (учитель)</a>
-        </div>
-      </section>
-
-      <!-- Контейнер для страниц -->
+      <!-- Контейнер для страниц (профиль, топ, статистика) -->
       <div id="pageContainer"></div>
 
-      <!-- Кнопка выхода -->
+      <!-- Кнопка выхода (всегда видна) -->
       <button id="logoutBtn" style="margin-top:30px;">Выйти</button>
     </div>
   </main>

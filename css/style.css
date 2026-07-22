@@ -310,3 +310,12 @@ body {
   justify-content: center !important;
   align-items: center !important;
 }
+
+/* Полноэкранный режим для страниц */
+#pageContainer {
+  display: none;
+  /* скрыт по умолчанию, показывается при открытии страниц */
+  min-height: 70vh;
+  width: 100%;
+  padding: 10px 0;
+}

@@ -1,9 +1,9 @@
 import { auth, db } from './firebase-config.js';
-import {
-  signInWithEmailAndPassword,
+import { 
+  signInWithEmailAndPassword, 
   createUserWithEmailAndPassword,
   onAuthStateChanged,
-  signOut
+  signOut 
 } from 'https://www.gstatic.com/firebasejs/10.14.0/firebase-auth.js';
 import {
   collection, addDoc, getDocs, query, where, limit,
@@ -33,10 +33,7 @@ const showProfileLink = document.getElementById('showProfileLink');
 const showStudentsLink = document.getElementById('showStudentsLink');
 const showTopLink = document.getElementById('showTopLink');
 const showStatisticsLink = document.getElementById('showStatisticsLink');
-
-// Элементы, которые скрываем при открытии страниц
-const feedSection = document.querySelector('.feed');
-const addBtn = document.getElementById('showAddAchievementBtn');
+const mainFeed = document.getElementById('mainFeed');
 
 let currentUser = null;
 let currentUserDoc = null;
@@ -46,17 +43,18 @@ let userLikesSet = new Set();
 
 // ---- Управление видимостью главного содержимого ----
 function hideMainContent() {
-  if (feedSection) feedSection.style.display = 'none';
-  if (addBtn) addBtn.style.display = 'none';
+  if (mainFeed) mainFeed.style.display = 'none';
+  pageContainer.style.display = 'block';
+  pageContainer.style.minHeight = '70vh'; // чтобы занимал больше места
 }
 
 function showMainContent() {
-  if (feedSection) feedSection.style.display = 'block';
-  if (addBtn) addBtn.style.display = 'block';
-  // Очищаем pageContainer, возвращаем главную
+  if (mainFeed) mainFeed.style.display = 'block';
+  pageContainer.style.display = 'none';
   pageContainer.innerHTML = '';
   currentViewType = null;
   currentViewUid = null;
+  // Лента уже будет обновлена отдельно
 }
 
 // ---- Закрытие модалки ----
@@ -163,8 +161,7 @@ onAuthStateChanged(auth, async (user) => {
       currentUserDoc = { id: snap.docs[0].id, ...snap.docs[0].data() };
     }
     await loadUserLikes();
-    // Показываем главную (ленту)
-    showMainContent();
+    showMainContent(); // показываем главную ленту
     loadNewAchievement();
   } else {
     currentUser = null;
@@ -330,7 +327,7 @@ async function showNewAchievementsModal(achievements) {
         <p><small>${dateStr}</small></p>
         <div style="margin-top:20px;">
           <button id="prevCardBtn" ${index === 0 ? 'disabled' : ''}>◀ Назад</button>
-          <button id="nextCardBtn" ${index === total - 1 ? 'disabled' : ''}>Вперёд ▶</button>
+          <button id="nextCardBtn" ${index === total-1 ? 'disabled' : ''}>Вперёд ▶</button>
           <button id="viewFullBtn">Подробнее</button>
         </div>
         <div style="margin-top:10px;">
@@ -347,7 +344,7 @@ async function showNewAchievementsModal(achievements) {
       }
     });
     document.getElementById('nextCardBtn')?.addEventListener('click', async () => {
-      if (currentIndex < total - 1) {
+      if (currentIndex < total-1) {
         currentIndex++;
         await renderCard(currentIndex);
         await markAsViewed(achievements[currentIndex].id);
@@ -497,7 +494,7 @@ async function toggleLike(achievementId) {
   }
 }
 
-// ---- Список учеников (с полноэкранным режимом) ----
+// ---- Список учеников (полноэкранный режим) ----
 async function showStudents() {
   currentViewType = 'students';
   currentViewUid = null;
@@ -522,7 +519,7 @@ async function showStudents() {
   }
 }
 
-// ---- Профиль ученика (с полноэкранным режимом) ----
+// ---- Профиль ученика (полноэкранный режим) ----
 async function showUserProfile(uid) {
   currentViewType = 'profile';
   currentViewUid = uid;
@@ -560,16 +557,16 @@ async function showUserProfile(uid) {
       </div>
       <div id="achievementsList">
         ${achievements.map(a => {
-      const liked = userLikesSet.has(a.id);
-      const likeIcon = liked ? '❤️' : '♡';
-      return `
+          const liked = userLikesSet.has(a.id);
+          const likeIcon = liked ? '❤️' : '♡';
+          return `
             <div class="achievement-item" data-id="${a.id}" style="cursor:pointer; padding:10px; border-bottom:1px solid #eee;">
               <h4>${a.title}</h4>
               <p><strong>Категория:</strong> ${a.category || 'без категории'}</p>
               <small><span class="like-icon">${likeIcon}</span> ${a.likesCount || 0}</small>
             </div>
           `;
-    }).join('')}
+        }).join('')}
       </div>
       <div style="margin-top:30px;"><button id="backToMainBtn" class="btn-primary">На главную</button></div>
     `;
@@ -611,7 +608,7 @@ function renderAchievementsList(achievements) {
   }).join('');
 }
 
-// ---- Топ-10 достижений (с полноэкранным режимом) ----
+// ---- Топ-10 достижений (полноэкранный режим) ----
 async function showTopAchievements() {
   currentViewType = 'top';
   currentViewUid = null;
@@ -674,7 +671,7 @@ async function showTopAchievements() {
   }
 }
 
-// ---- Статистика для учителя (с полноэкранным режимом) ----
+// ---- Статистика для учителя (полноэкранный режим) ----
 async function showStatistics() {
   if (!currentUserDoc || currentUserDoc.role !== 'teacher') {
     pageContainer.innerHTML = '<p>Доступно только учителям.</p>';
@@ -707,7 +704,7 @@ async function showStatistics() {
     const month = document.getElementById('statMonth').value;
     if (!month) { alert('Выберите месяц'); return; }
     const [year, monthNum] = month.split('-');
-    const start = new Date(year, monthNum - 1, 1);
+    const start = new Date(year, monthNum-1, 1);
     const end = new Date(year, monthNum, 0);
 
     try {
