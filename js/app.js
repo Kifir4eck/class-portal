@@ -1,9 +1,9 @@
 import { auth, db } from './firebase-config.js';
-import { 
-  signInWithEmailAndPassword, 
+import {
+  signInWithEmailAndPassword,
   createUserWithEmailAndPassword,
   onAuthStateChanged,
-  signOut 
+  signOut
 } from 'https://www.gstatic.com/firebasejs/10.14.0/firebase-auth.js';
 import {
   collection, addDoc, getDocs, query, where, limit,
@@ -20,10 +20,6 @@ const showLoginLink = document.getElementById('showLogin');
 const loginBtn = document.getElementById('loginBtn');
 const registerBtn = document.getElementById('registerBtn');
 const logoutBtn = document.getElementById('logoutBtn');
-const showAddBtn = document.getElementById('showAddAchievementBtn');
-const addForm = document.getElementById('addAchievementForm');
-const submitAchBtn = document.getElementById('submitAchievementBtn');
-const cancelAddBtn = document.getElementById('cancelAddAchievementBtn');
 const newAchievementCard = document.getElementById('newAchievementCard');
 const pageContainer = document.getElementById('pageContainer');
 const modal = document.getElementById('modal');
@@ -45,7 +41,7 @@ let userLikesSet = new Set();
 function hideMainContent() {
   if (mainFeed) mainFeed.style.display = 'none';
   pageContainer.style.display = 'block';
-  pageContainer.style.minHeight = '70vh'; // чтобы занимал больше места
+  pageContainer.style.minHeight = '70vh';
 }
 
 function showMainContent() {
@@ -54,7 +50,6 @@ function showMainContent() {
   pageContainer.innerHTML = '';
   currentViewType = null;
   currentViewUid = null;
-  // Лента уже будет обновлена отдельно
 }
 
 // ---- Закрытие модалки ----
@@ -161,7 +156,7 @@ onAuthStateChanged(auth, async (user) => {
       currentUserDoc = { id: snap.docs[0].id, ...snap.docs[0].data() };
     }
     await loadUserLikes();
-    showMainContent(); // показываем главную ленту
+    showMainContent();
     loadNewAchievement();
   } else {
     currentUser = null;
@@ -174,23 +169,8 @@ onAuthStateChanged(auth, async (user) => {
   }
 });
 
-// ---- Добавление достижения ----
-showAddBtn.addEventListener('click', () => {
-  addForm.style.display = 'block';
-});
-
-cancelAddBtn.addEventListener('click', () => {
-  addForm.style.display = 'none';
-});
-
-submitAchBtn.addEventListener('click', async () => {
-  const title = document.getElementById('achTitle').value;
-  const category = document.getElementById('achCategory').value;
-  const description = document.getElementById('achDescription').value;
-  if (!title || !description) {
-    alert('Заполните название и описание');
-    return;
-  }
+// ---- Добавление достижения (функция, вызываемая из профиля) ----
+async function addAchievement(title, category, description) {
   try {
     await addDoc(collection(db, 'achievements'), {
       userId: currentUser.uid,
@@ -202,15 +182,12 @@ submitAchBtn.addEventListener('click', async () => {
       updatedAt: serverTimestamp(),
       isDeleted: false
     });
-    alert('Достижение добавлено!');
-    addForm.style.display = 'none';
-    document.getElementById('achTitle').value = '';
-    document.getElementById('achDescription').value = '';
-    loadNewAchievement();
+    return true;
   } catch (e) {
-    alert('Ошибка: ' + e.message);
+    console.error('Ошибка добавления достижения:', e);
+    return false;
   }
-});
+}
 
 // ---- Загрузка ленты новых достижений ----
 async function loadNewAchievement() {
@@ -327,7 +304,7 @@ async function showNewAchievementsModal(achievements) {
         <p><small>${dateStr}</small></p>
         <div style="margin-top:20px;">
           <button id="prevCardBtn" ${index === 0 ? 'disabled' : ''}>◀ Назад</button>
-          <button id="nextCardBtn" ${index === total-1 ? 'disabled' : ''}>Вперёд ▶</button>
+          <button id="nextCardBtn" ${index === total - 1 ? 'disabled' : ''}>Вперёд ▶</button>
           <button id="viewFullBtn">Подробнее</button>
         </div>
         <div style="margin-top:10px;">
@@ -344,7 +321,7 @@ async function showNewAchievementsModal(achievements) {
       }
     });
     document.getElementById('nextCardBtn')?.addEventListener('click', async () => {
-      if (currentIndex < total-1) {
+      if (currentIndex < total - 1) {
         currentIndex++;
         await renderCard(currentIndex);
         await markAsViewed(achievements[currentIndex].id);
@@ -494,7 +471,7 @@ async function toggleLike(achievementId) {
   }
 }
 
-// ---- Список учеников (полноэкранный режим) ----
+// ---- Список учеников (полноэкранный) ----
 async function showStudents() {
   currentViewType = 'students';
   currentViewUid = null;
@@ -519,7 +496,7 @@ async function showStudents() {
   }
 }
 
-// ---- Профиль ученика (полноэкранный режим) ----
+// ---- Профиль ученика (с кнопкой добавить достижение, если свой) ----
 async function showUserProfile(uid) {
   currentViewType = 'profile';
   currentViewUid = uid;
@@ -533,6 +510,30 @@ async function showUserProfile(uid) {
 
     const displayName = user.fullName || user.firstName || 'Без имени';
     const ageText = user.age ? `${user.age} лет` : 'не указан';
+    const isOwnProfile = (currentUser && uid === currentUser.uid);
+
+    // Если свой профиль – добавляем кнопку и форму
+    let addButtonHtml = '';
+    let addFormHtml = '';
+    if (isOwnProfile) {
+      addButtonHtml = `<button id="showAddAchievementBtn" class="btn-primary" style="margin-bottom:15px;">➕ Добавить достижение</button>`;
+      addFormHtml = `
+        <div id="addAchievementForm" style="display:none; margin-top:10px; background:#f5f5f5; padding:20px; border-radius:8px;">
+          <h4>Новое достижение</h4>
+          <input type="text" id="achTitle" placeholder="Название" style="width:100%; padding:8px; margin:5px 0; border:1px solid #ccc; border-radius:6px;" />
+          <select id="achCategory" style="width:100%; padding:8px; margin:5px 0; border:1px solid #ccc; border-radius:6px;">
+            <option value="учёба">Учёба</option>
+            <option value="спорт">Спорт</option>
+            <option value="проекты">Проекты</option>
+            <option value="олимпиады">Олимпиады</option>
+            <option value="творчество">Творчество</option>
+          </select>
+          <textarea id="achDescription" placeholder="Описание. Ссылки на фото можно вставить сюда (Google Диск, Яндекс Диск и т.п.)" rows="4" style="width:100%; padding:8px; margin:5px 0; border:1px solid #ccc; border-radius:6px;"></textarea>
+          <button id="submitAchievementBtn" style="background:#800020; color:white; border:none; padding:8px 16px; border-radius:6px; cursor:pointer;">Опубликовать</button>
+          <button id="cancelAddAchievementBtn" style="background:#ccc; border:none; padding:8px 16px; border-radius:6px; cursor:pointer; margin-left:5px;">Отмена</button>
+        </div>
+      `;
+    }
 
     const qAch = query(
       collection(db, 'achievements'),
@@ -551,27 +552,75 @@ async function showUserProfile(uid) {
       <p>Возраст: ${ageText}</p>
       <hr/>
       <h3>Достижения</h3>
+      ${addButtonHtml}
+      ${addFormHtml}
       <div>
         <button id="sortDateBtn">По дате (новые)</button>
         <button id="sortLikesBtn">По популярности</button>
       </div>
       <div id="achievementsList">
         ${achievements.map(a => {
-          const liked = userLikesSet.has(a.id);
-          const likeIcon = liked ? '❤️' : '♡';
-          return `
+      const liked = userLikesSet.has(a.id);
+      const likeIcon = liked ? '❤️' : '♡';
+      return `
             <div class="achievement-item" data-id="${a.id}" style="cursor:pointer; padding:10px; border-bottom:1px solid #eee;">
               <h4>${a.title}</h4>
               <p><strong>Категория:</strong> ${a.category || 'без категории'}</p>
               <small><span class="like-icon">${likeIcon}</span> ${a.likesCount || 0}</small>
             </div>
           `;
-        }).join('')}
+    }).join('')}
       </div>
       <div style="margin-top:30px;"><button id="backToMainBtn" class="btn-primary">На главную</button></div>
     `;
     pageContainer.innerHTML = html;
 
+    // Обработчики для кнопок, если они есть
+    if (isOwnProfile) {
+      const showAddBtn = document.getElementById('showAddAchievementBtn');
+      const addFormEl = document.getElementById('addAchievementForm');
+      const submitBtn = document.getElementById('submitAchievementBtn');
+      const cancelBtn = document.getElementById('cancelAddAchievementBtn');
+
+      if (showAddBtn) {
+        showAddBtn.addEventListener('click', () => {
+          addFormEl.style.display = addFormEl.style.display === 'block' ? 'none' : 'block';
+        });
+      }
+      if (submitBtn) {
+        submitBtn.addEventListener('click', async () => {
+          const title = document.getElementById('achTitle').value;
+          const category = document.getElementById('achCategory').value;
+          const description = document.getElementById('achDescription').value;
+          if (!title || !description) {
+            alert('Заполните название и описание');
+            return;
+          }
+          const success = await addAchievement(title, category, description);
+          if (success) {
+            alert('Достижение добавлено!');
+            addFormEl.style.display = 'none';
+            document.getElementById('achTitle').value = '';
+            document.getElementById('achDescription').value = '';
+            // Обновляем профиль
+            showUserProfile(uid);
+            // Обновляем ленту новых
+            loadNewAchievement();
+          } else {
+            alert('Ошибка добавления достижения');
+          }
+        });
+      }
+      if (cancelBtn) {
+        cancelBtn.addEventListener('click', () => {
+          addFormEl.style.display = 'none';
+          document.getElementById('achTitle').value = '';
+          document.getElementById('achDescription').value = '';
+        });
+      }
+    }
+
+    // Обработчики сортировки
     document.getElementById('sortDateBtn')?.addEventListener('click', () => {
       achievements.sort((a, b) => (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0));
       renderAchievementsList(achievements);
@@ -608,7 +657,7 @@ function renderAchievementsList(achievements) {
   }).join('');
 }
 
-// ---- Топ-10 достижений (полноэкранный режим) ----
+// ---- Топ-10 достижений (полноэкранный) ----
 async function showTopAchievements() {
   currentViewType = 'top';
   currentViewUid = null;
@@ -671,7 +720,7 @@ async function showTopAchievements() {
   }
 }
 
-// ---- Статистика для учителя (полноэкранный режим) ----
+// ---- Статистика для учителя (полноэкранный) ----
 async function showStatistics() {
   if (!currentUserDoc || currentUserDoc.role !== 'teacher') {
     pageContainer.innerHTML = '<p>Доступно только учителям.</p>';
@@ -704,7 +753,7 @@ async function showStatistics() {
     const month = document.getElementById('statMonth').value;
     if (!month) { alert('Выберите месяц'); return; }
     const [year, monthNum] = month.split('-');
-    const start = new Date(year, monthNum-1, 1);
+    const start = new Date(year, monthNum - 1, 1);
     const end = new Date(year, monthNum, 0);
 
     try {

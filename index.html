@@ -10,14 +10,12 @@
 
 <body>
 
-  <!-- Шапка -->
   <header class="header">
     <div class="header__container">
       <div class="header__title">7 «В» класс</div>
     </div>
   </header>
 
-  <!-- Основной контент -->
   <main class="main" id="app">
     <h1 class="main__heading">Достижения</h1>
 
@@ -45,28 +43,8 @@
 
     <!-- Основное приложение (после входа) -->
     <div id="appContent" style="display:none;">
-      <!-- Главная лента и кнопки (обёрнуты для скрытия) -->
+      <!-- Главная лента (без кнопки добавления и формы) -->
       <div id="mainFeed">
-        <button id="showAddAchievementBtn" class="btn-primary">➕ Добавить достижение</button>
-
-        <div id="addAchievementForm"
-          style="display:none; margin-top:20px; background:#f5f5f5; padding:20px; border-radius:8px;">
-          <h3>Новое достижение</h3>
-          <input type="text" id="achTitle" placeholder="Название" />
-          <select id="achCategory">
-            <option value="учёба">Учёба</option>
-            <option value="спорт">Спорт</option>
-            <option value="проекты">Проекты</option>
-            <option value="олимпиады">Олимпиады</option>
-            <option value="творчество">Творчество</option>
-          </select>
-          <textarea id="achDescription"
-            placeholder="Описание. Ссылки на фото можно вставить сюда (Google Диск, Яндекс Диск и т.п.)"
-            rows="4"></textarea>
-          <button id="submitAchievementBtn">Опубликовать</button>
-          <button id="cancelAddAchievementBtn">Отмена</button>
-        </div>
-
         <section class="feed">
           <h2 class="feed__label">Лента новых достижений</h2>
           <div class="feed__card" id="newAchievementCard">
