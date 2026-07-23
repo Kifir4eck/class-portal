@@ -496,7 +496,7 @@ async function showStudents() {
   }
 }
 
-// ---- Профиль ученика (с кнопкой добавить достижение, если свой) ----
+// ---- Профиль ученика (с кнопкой добавить достижение над заголовком) ----
 async function showUserProfile(uid) {
   currentViewType = 'profile';
   currentViewUid = uid;
@@ -512,14 +512,13 @@ async function showUserProfile(uid) {
     const ageText = user.age ? `${user.age} лет` : 'не указан';
     const isOwnProfile = (currentUser && uid === currentUser.uid);
 
-    // Если свой профиль – добавляем кнопку и форму
+    // Если свой профиль – добавляем кнопку и форму (над заголовком)
     let addButtonHtml = '';
     let addFormHtml = '';
     if (isOwnProfile) {
-      // ✅ Изменённая кнопка: убран плюс, текст жёлтый
       addButtonHtml = `<button id="showAddAchievementBtn" style="margin-bottom:15px; background:#800020; color:#FFD700; border:none; padding:10px 20px; border-radius:8px; cursor:pointer; font-size:1rem; font-weight:bold;">Добавить достижение</button>`;
       addFormHtml = `
-        <div id="addAchievementForm" style="display:none; margin-top:10px; background:#f5f5f5; padding:20px; border-radius:8px;">
+        <div id="addAchievementForm" style="display:none; margin-bottom:15px; background:#f5f5f5; padding:20px; border-radius:8px;">
           <h4>Новое достижение</h4>
           <input type="text" id="achTitle" placeholder="Название" style="width:100%; padding:8px; margin:5px 0; border:1px solid #ccc; border-radius:6px;" />
           <select id="achCategory" style="width:100%; padding:8px; margin:5px 0; border:1px solid #ccc; border-radius:6px;">
@@ -552,9 +551,9 @@ async function showUserProfile(uid) {
       <p>Класс: ${user.class}</p>
       <p>Возраст: ${ageText}</p>
       <hr/>
-      <h3>Достижения</h3>
       ${addButtonHtml}
       ${addFormHtml}
+      <h3>Достижения</h3>
       <div>
         <button id="sortDateBtn">По дате (новые)</button>
         <button id="sortLikesBtn">По популярности</button>
@@ -603,9 +602,7 @@ async function showUserProfile(uid) {
             addFormEl.style.display = 'none';
             document.getElementById('achTitle').value = '';
             document.getElementById('achDescription').value = '';
-            // Обновляем профиль
             showUserProfile(uid);
-            // Обновляем ленту новых
             loadNewAchievement();
           } else {
             alert('Ошибка добавления достижения');
