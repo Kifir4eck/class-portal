@@ -496,7 +496,7 @@ async function showStudents() {
   }
 }
 
-// ---- Профиль ученика (с кнопкой добавить достижение над заголовком) ----
+// ---- Профиль ученика (ТОЛЬКО ОДНА КНОПКА НАД ЗАГОЛОВКОМ) ----
 async function showUserProfile(uid) {
   currentViewType = 'profile';
   currentViewUid = uid;
@@ -512,7 +512,7 @@ async function showUserProfile(uid) {
     const ageText = user.age ? `${user.age} лет` : 'не указан';
     const isOwnProfile = (currentUser && uid === currentUser.uid);
 
-    // Если свой профиль – добавляем кнопку и форму (над заголовком)
+    // Кнопка и форма (только для своего профиля, генерируются один раз)
     let addButtonHtml = '';
     let addFormHtml = '';
     if (isOwnProfile) {
@@ -535,6 +535,7 @@ async function showUserProfile(uid) {
       `;
     }
 
+    // Получаем достижения
     const qAch = query(
       collection(db, 'achievements'),
       where('userId', '==', uid),
@@ -545,6 +546,7 @@ async function showUserProfile(uid) {
 
     achievements.sort((a, b) => (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0));
 
+    // HTML-шаблон с одной кнопкой (над заголовком "Достижения")
     let html = `
       <h2>${displayName}</h2>
       ${user.avatarUrl ? `<img src="${user.avatarUrl}" style="max-width:150px;border-radius:50%;"/>` : ''}
@@ -575,7 +577,7 @@ async function showUserProfile(uid) {
     `;
     pageContainer.innerHTML = html;
 
-    // Обработчики для кнопок, если они есть
+    // Обработчики для кнопки и формы (если свой профиль)
     if (isOwnProfile) {
       const showAddBtn = document.getElementById('showAddAchievementBtn');
       const addFormEl = document.getElementById('addAchievementForm');
