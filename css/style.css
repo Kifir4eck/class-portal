@@ -319,3 +319,9 @@ body {
   width: 100%;
   padding: 10px 0;
 }
+
+.like-icon,
+.like-btn {
+  font-size: 1.2rem !important;
+  line-height: 1 !important;
+}
