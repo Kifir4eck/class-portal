@@ -325,3 +325,9 @@ body {
   font-size: 1.2rem !important;
   line-height: 1 !important;
 }
+
+.like-icon,
+.like-btn {
+  font-family: "Segoe UI", Arial, sans-serif !important;
+  font-variant-emoji: text !important;
+}

@@ -308,7 +308,7 @@ async function showNewAchievementsModal(achievements) {
           <button id="viewFullBtn">Подробнее</button>
         </div>
         <div style="margin-top:10px;">
-          <button id="likeFromModal" class="like-btn" style="background:none; border:none; font-size:1.2rem; cursor:pointer; color:${liked ? '#FF0000' : '#888'};">${likeIcon} ${a.likesCount || 0}</button>
+          <button id="likeFromModal" class="like-btn" style="background:none; border:none; font-size:1.2rem; font-family: 'Segoe UI', Arial, sans-serif; font-variant-emoji: text; cursor:pointer; color:${liked ? '#FF0000' : '#888'};">${likeIcon} ${a.likesCount || 0}</button>
         </div>
       </div>
     `;
@@ -392,7 +392,7 @@ async function showFullAchievement(achievementId) {
         <p><strong>Дата:</strong> ${a.createdAt ? new Date(a.createdAt.seconds * 1000).toLocaleString() : ''}</p>
         <p><strong>Описание:</strong> ${a.description || ''}</p>
         <div style="margin-top:15px;">
-          <button id="likeFullBtn" class="like-btn" style="background:none; border:none; font-size:1.2rem; cursor:pointer; color:${liked ? '#FF0000' : '#888'};">${likeIcon} ${a.likesCount || 0}</button>
+          <button id="likeFullBtn" class="like-btn" style="background:none; border:none; font-size:1.2rem; font-family: 'Segoe UI', Arial, sans-serif; font-variant-emoji: text; cursor:pointer; color:${liked ? '#FF0000' : '#888'};">${likeIcon} ${a.likesCount || 0}</button>
           ${isAuthor ? `<button id="deleteFullBtn" style="margin-left:10px;background:red;color:white;border:none;padding:5px 15px;border-radius:6px;cursor:pointer;">Удалить</button>` : ''}
         </div>
         <div style="margin-top:15px;">
@@ -565,7 +565,7 @@ async function showUserProfile(uid) {
             <div class="achievement-item" data-id="${a.id}" style="cursor:pointer; padding:10px; border-bottom:1px solid #eee;">
               <h4>${a.title}</h4>
               <p><strong>Категория:</strong> ${a.category || 'без категории'}</p>
-              <small><span class="like-icon" style="font-size:1.1rem; color:${liked ? '#FF0000' : '#888'};">${likeIcon}</span> ${a.likesCount || 0}</small>
+              <small><span class="like-icon" style="font-size:1.1rem; font-family: 'Segoe UI', Arial, sans-serif; font-variant-emoji: text; color:${liked ? '#FF0000' : '#888'};">${likeIcon}</span> ${a.likesCount || 0}</small>
             </div>
           `;
     }).join('')}
@@ -646,7 +646,7 @@ function renderAchievementsList(achievements) {
       <div class="achievement-item" data-id="${a.id}" style="cursor:pointer; padding:10px; border-bottom:1px solid #eee;">
         <h4>${a.title}</h4>
         <p><strong>Категория:</strong> ${a.category || 'без категории'}</p>
-        <small><span class="like-icon" style="font-size:1.1rem; color:${liked ? '#FF0000' : '#888'};">${likeIcon}</span> ${a.likesCount || 0}</small>
+        <small><span class="like-icon" style="font-size:1.1rem; font-family: 'Segoe UI', Arial, sans-serif; font-variant-emoji: text; color:${liked ? '#FF0000' : '#888'};">${likeIcon}</span> ${a.likesCount || 0}</small>
       </div>
     `;
   }).join('');
@@ -700,7 +700,7 @@ async function showTopAchievements() {
         <h4>${a.title}</h4>
         <p><strong>Категория:</strong> ${a.category || 'без категории'}</p>
         <p><strong>Автор:</strong> ${a.author}</p>
-        <small><span class="like-icon" style="font-size:1.1rem; color:${a.liked ? '#FF0000' : '#888'};">${a.likeIcon}</span> ${a.likesCount || 0}</small>
+        <small><span class="like-icon" style="font-size:1.1rem; font-family: 'Segoe UI', Arial, sans-serif; font-variant-emoji: text; color:${a.liked ? '#FF0000' : '#888'};">${a.likeIcon}</span> ${a.likesCount || 0}</small>
       </div>`;
     });
     html += '</div>';
