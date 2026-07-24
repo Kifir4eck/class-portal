@@ -1,21 +1,21 @@
 <!DOCTYPE html>
 <html lang="ru">
-
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>7 «В» — Достижения</title>
   <link rel="stylesheet" href="css/style.css" />
 </head>
-
 <body>
 
+  <!-- Шапка -->
   <header class="header">
     <div class="header__container">
       <div class="header__title">7 «В» класс</div>
     </div>
   </header>
 
+  <!-- Основной контент -->
   <main class="main" id="app">
     <h1 class="main__heading">Достижения</h1>
 
@@ -34,8 +34,15 @@
         <input type="text" id="regLastName" placeholder="Фамилия" required />
         <input type="email" id="regEmail" placeholder="Email" required />
         <input type="password" id="regPassword" placeholder="Пароль (минимум 6 символов)" required />
-        <input type="text" id="regClass" placeholder="Класс (например, 7В)" required />
-        <input type="number" id="regAge" placeholder="Возраст (необязательно)" min="5" max="20" />
+        <div style="display:flex; gap:10px; align-items:center; margin:5px 0;">
+          <label>Класс: 
+            <input type="number" id="regClassNumber" placeholder="Номер" style="width:80px;" required />
+          </label>
+          <label>Буква:
+            <input type="text" id="regClassLetter" placeholder="Буква" style="width:60px;" required maxlength="1" />
+          </label>
+        </div>
+        <label>Дата рождения (необязательно): <input type="date" id="regBirthDate" /></label>
         <button id="registerBtn">Зарегистрироваться</button>
         <p>Уже есть аккаунт? <a href="#" id="showLogin">Войти</a></p>
       </div>
@@ -78,5 +85,4 @@
   <script type="module" src="js/firebase-config.js"></script>
   <script type="module" src="js/app.js"></script>
 </body>
-
 </html>

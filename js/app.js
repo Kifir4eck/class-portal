@@ -1,13 +1,14 @@
 import { auth, db } from './firebase-config.js';
-import {
-  signInWithEmailAndPassword,
+import { 
+  signInWithEmailAndPassword, 
   createUserWithEmailAndPassword,
   onAuthStateChanged,
-  signOut
+  signOut 
 } from 'https://www.gstatic.com/firebasejs/10.14.0/firebase-auth.js';
 import {
   collection, addDoc, getDocs, query, where, limit,
-  updateDoc, deleteDoc, doc, getDoc, serverTimestamp
+  updateDoc, deleteDoc, doc, getDoc, serverTimestamp,
+  deleteField
 } from 'https://www.gstatic.com/firebasejs/10.14.0/firebase-firestore.js';
 
 // ---- Элементы DOM ----
@@ -36,6 +37,17 @@ let currentUserDoc = null;
 let currentViewType = null;
 let currentViewUid = null;
 let userLikesSet = new Set();
+
+// ---- Утилиты ----
+function getClassDisplayWithQuotes(user) {
+  const num = user.classNumber || '';
+  const letter = user.classLetter || '';
+  return letter ? `${num}"${letter}"` : `${num}${letter}`;
+}
+
+function validateRussianLetter(letter) {
+  return /^[А-ЯЁ]$/i.test(letter);
+}
 
 // ---- Управление видимостью главного содержимого ----
 function hideMainContent() {
@@ -103,20 +115,29 @@ loginBtn.addEventListener('click', async () => {
   }
 });
 
+// ---- Регистрация с проверкой русской буквы ----
 registerBtn.addEventListener('click', async () => {
   const firstName = document.getElementById('regFirstName').value.trim();
   const lastName = document.getElementById('regLastName').value.trim();
   const email = document.getElementById('regEmail').value.trim();
   const password = document.getElementById('regPassword').value;
-  const className = document.getElementById('regClass').value.trim();
-  const age = document.getElementById('regAge').value.trim();
+  const classNumber = document.getElementById('regClassNumber').value.trim();
+  const classLetterRaw = document.getElementById('regClassLetter').value.trim();
+  const birthDate = document.getElementById('regBirthDate').value;
 
-  if (!firstName || !lastName || !email || !password || !className) {
-    alert('Заполните все обязательные поля (Имя, Фамилия, Email, Пароль, Класс)');
+  if (!firstName || !lastName || !email || !password || !classNumber || !classLetterRaw) {
+    alert('Заполните все обязательные поля (Имя, Фамилия, Email, Пароль, Номер и Буква класса)');
+    return;
+  }
+
+  const classLetter = classLetterRaw.toUpperCase();
+  if (!validateRussianLetter(classLetter)) {
+    alert('Буква класса должна быть русской (например, А, Б, В)');
     return;
   }
 
   const fullName = `${firstName} ${lastName}`;
+  const classDisplay = classNumber + classLetter;
 
   try {
     const userCred = await createUserWithEmailAndPassword(auth, email, password);
@@ -126,12 +147,22 @@ registerBtn.addEventListener('click', async () => {
       lastName,
       fullName,
       email,
-      class: className,
+      classNumber: parseInt(classNumber),
+      classLetter,
+      classDisplay,
       role: 'student',
       createdAt: serverTimestamp()
     };
-    if (age && !isNaN(age) && age > 0) {
-      userData.age = parseInt(age);
+    if (birthDate) {
+      const birth = new Date(birthDate);
+      const today = new Date();
+      let age = today.getFullYear() - birth.getFullYear();
+      const m = today.getMonth() - birth.getMonth();
+      if (m < 0 || (m === 0 && today.getDate() < birth.getDate())) {
+        age--;
+      }
+      userData.birthDate = birthDate;
+      userData.age = age;
     }
     await addDoc(collection(db, 'users'), userData);
     alert('Регистрация успешна!');
@@ -189,6 +220,64 @@ async function addAchievement(title, category, description) {
   }
 }
 
+// ---- Обновление профиля с проверкой русской буквы ----
+async function updateUserProfile({ firstName, lastName, classNumber, classLetter, birthDate }) {
+  if (!currentUser || !currentUserDoc) return;
+  try {
+    const userRef = doc(db, 'users', currentUserDoc.id);
+    const updateData = {};
+
+    if (firstName !== undefined) updateData.firstName = firstName.trim();
+    if (lastName !== undefined) updateData.lastName = lastName.trim();
+    if (classNumber !== undefined) updateData.classNumber = parseInt(classNumber);
+    if (classLetter !== undefined) {
+      const letter = classLetter.trim().toUpperCase();
+      if (!validateRussianLetter(letter)) {
+        alert('Буква класса должна быть русской (например, А, Б, В)');
+        return;
+      }
+      updateData.classLetter = letter;
+    }
+    if (firstName !== undefined || lastName !== undefined) {
+      updateData.fullName = `${updateData.firstName || currentUserDoc.firstName} ${updateData.lastName || currentUserDoc.lastName}`.trim();
+    }
+    if (classNumber !== undefined || classLetter !== undefined) {
+      const num = updateData.classNumber !== undefined ? updateData.classNumber : currentUserDoc.classNumber;
+      const letr = updateData.classLetter !== undefined ? updateData.classLetter : currentUserDoc.classLetter;
+      updateData.classDisplay = `${num}${letr}`;
+    }
+
+    // Обработка даты рождения
+    if (birthDate === null || birthDate === '') {
+      updateData.birthDate = deleteField();
+      updateData.age = deleteField();
+    } else if (birthDate) {
+      const birth = new Date(birthDate);
+      const today = new Date();
+      let age = today.getFullYear() - birth.getFullYear();
+      const m = today.getMonth() - birth.getMonth();
+      if (m < 0 || (m === 0 && today.getDate() < birth.getDate())) {
+        age--;
+      }
+      updateData.birthDate = birthDate;
+      updateData.age = age;
+    }
+
+    await updateDoc(userRef, updateData);
+    // Обновляем локальный кэш
+    Object.assign(currentUserDoc, updateData);
+    if (updateData.birthDate === deleteField()) {
+      delete currentUserDoc.birthDate;
+      delete currentUserDoc.age;
+    }
+    showUserProfile(currentUser.uid);
+    loadNewAchievement();
+  } catch (e) {
+    console.error('Ошибка обновления профиля:', e);
+    alert('Ошибка обновления профиля: ' + e.message);
+  }
+}
+
 // ---- Загрузка ленты новых достижений ----
 async function loadNewAchievement() {
   if (!currentUser) return;
@@ -231,7 +320,7 @@ async function loadNewAchievement() {
       if (!userSnap.empty) {
         const userData = userSnap.docs[0].data();
         authorName = userData.fullName || userData.firstName || 'Неизвестно';
-        authorClass = userData.class ? ` (${userData.class})` : '';
+        authorClass = userData.classLetter ? ` (${getClassDisplayWithQuotes(userData)})` : '';
       }
     } catch (e) {
       console.error('Ошибка получения автора:', e);
@@ -271,7 +360,7 @@ async function showNewAchievementsModal(achievements) {
       if (!userSnap.empty) {
         const userData = userSnap.docs[0].data();
         const name = userData.fullName || userData.firstName || 'Неизвестно';
-        const cls = userData.class ? ` (${userData.class})` : '';
+        const cls = userData.classLetter ? ` (${getClassDisplayWithQuotes(userData)})` : '';
         authorCache[userId] = name + cls;
         return authorCache[userId];
       }
@@ -304,7 +393,7 @@ async function showNewAchievementsModal(achievements) {
         <p><small>${dateStr}</small></p>
         <div style="margin-top:20px;">
           <button id="prevCardBtn" ${index === 0 ? 'disabled' : ''}>◀ Назад</button>
-          <button id="nextCardBtn" ${index === total - 1 ? 'disabled' : ''}>Вперёд ▶</button>
+          <button id="nextCardBtn" ${index === total-1 ? 'disabled' : ''}>Вперёд ▶</button>
           <button id="viewFullBtn">Подробнее</button>
         </div>
         <div style="margin-top:10px;">
@@ -321,7 +410,7 @@ async function showNewAchievementsModal(achievements) {
       }
     });
     document.getElementById('nextCardBtn')?.addEventListener('click', async () => {
-      if (currentIndex < total - 1) {
+      if (currentIndex < total-1) {
         currentIndex++;
         await renderCard(currentIndex);
         await markAsViewed(achievements[currentIndex].id);
@@ -471,7 +560,7 @@ async function toggleLike(achievementId) {
   }
 }
 
-// ---- Список учеников ----
+// ---- Список учеников (отображаем класс с кавычками) ----
 async function showStudents() {
   currentViewType = 'students';
   currentViewUid = null;
@@ -483,7 +572,8 @@ async function showStudents() {
     snap.forEach(doc => {
       const u = doc.data();
       const displayName = u.fullName || u.firstName || 'Без имени';
-      html += `<div class="user-card" data-uid="${u.uid}">${displayName} (${u.class})</div>`;
+      const classDisplay = u.classLetter ? getClassDisplayWithQuotes(u) : (u.classDisplay || '?');
+      html += `<div class="user-card" data-uid="${u.uid}">${displayName} (${classDisplay})</div>`;
     });
     html += `<div style="margin-top:30px;"><button id="backToMainBtn" class="btn-primary">На главную</button></div>`;
     pageContainer.innerHTML = html;
@@ -509,9 +599,58 @@ async function showUserProfile(uid) {
     const user = userDoc.data();
 
     const displayName = user.fullName || user.firstName || 'Без имени';
-    const ageText = user.age ? `${user.age} лет` : 'не указан';
+    const classDisplay = user.classLetter ? getClassDisplayWithQuotes(user) : (user.classDisplay || '?');
+    
+    // Вычисляем возраст
+    let ageText = 'не указан';
+    if (user.birthDate) {
+      const birth = new Date(user.birthDate);
+      const today = new Date();
+      let age = today.getFullYear() - birth.getFullYear();
+      const m = today.getMonth() - birth.getMonth();
+      if (m < 0 || (m === 0 && today.getDate() < birth.getDate())) {
+        age--;
+      }
+      ageText = `${age} лет`;
+    } else if (user.age) {
+      ageText = `${user.age} лет`;
+    }
+
     const isOwnProfile = (currentUser && uid === currentUser.uid);
 
+    // Кнопка и форма редактирования профиля (только свой)
+    let editButtonHtml = '';
+    let editFormHtml = '';
+    if (isOwnProfile) {
+      const currentFirstName = user.firstName || '';
+      const currentLastName = user.lastName || '';
+      const currentClassNumber = user.classNumber || '';
+      const currentClassLetter = user.classLetter || '';
+      const currentBirthDate = user.birthDate || '';
+      editButtonHtml = `<button id="editProfileBtn" style="margin-bottom:10px; background:#800020; color:white; border:none; padding:8px 16px; border-radius:6px; cursor:pointer;">Редактировать профиль</button>`;
+      editFormHtml = `
+        <div id="editProfileForm" style="display:none; margin-bottom:15px; background:#f5f5f5; padding:20px; border-radius:8px;">
+          <h4>Редактировать профиль</h4>
+          <input type="text" id="editFirstName" placeholder="Имя" value="${currentFirstName}" style="width:100%; padding:8px; margin:5px 0; border:1px solid #ccc; border-radius:6px;" />
+          <input type="text" id="editLastName" placeholder="Фамилия" value="${currentLastName}" style="width:100%; padding:8px; margin:5px 0; border:1px solid #ccc; border-radius:6px;" />
+          <div style="display:flex; gap:10px; align-items:center; margin:5px 0;">
+            <label>Класс: 
+              <input type="number" id="editClassNumber" value="${currentClassNumber}" style="width:80px;" required />
+            </label>
+            <label>Буква:
+              <input type="text" id="editClassLetter" value="${currentClassLetter}" style="width:60px;" required maxlength="1" />
+            </label>
+          </div>
+          <label>Дата рождения: <input type="date" id="editBirthDate" value="${currentBirthDate}" style="padding:6px; border-radius:4px; border:1px solid #ccc;" /></label>
+          <div style="margin-top:10px;">
+            <button id="saveProfileBtn" style="background:#800020; color:white; border:none; padding:6px 16px; border-radius:6px; cursor:pointer;">Сохранить</button>
+            <button id="cancelEditBtn" style="background:#ccc; border:none; padding:6px 16px; border-radius:6px; cursor:pointer;">Отмена</button>
+          </div>
+        </div>
+      `;
+    }
+
+    // Кнопка добавления достижения
     let addButtonHtml = '';
     let addFormHtml = '';
     if (isOwnProfile) {
@@ -547,8 +686,10 @@ async function showUserProfile(uid) {
     let html = `
       <h2>${displayName}</h2>
       ${user.avatarUrl ? `<img src="${user.avatarUrl}" style="max-width:150px;border-radius:50%;"/>` : ''}
-      <p>Класс: ${user.class}</p>
+      <p>Класс: ${classDisplay}</p>
       <p>Возраст: ${ageText}</p>
+      ${editButtonHtml}
+      ${editFormHtml}
       <hr/>
       ${addButtonHtml}
       ${addFormHtml}
@@ -559,26 +700,79 @@ async function showUserProfile(uid) {
       </div>
       <div id="achievementsList">
         ${achievements.map(a => {
-      const liked = userLikesSet.has(a.id);
-      const likeIcon = liked ? '♥' : '♡';
-      return `
+          const liked = userLikesSet.has(a.id);
+          const likeIcon = liked ? '♥' : '♡';
+          return `
             <div class="achievement-item" data-id="${a.id}" style="cursor:pointer; padding:10px; border-bottom:1px solid #eee;">
               <h4>${a.title}</h4>
               <p><strong>Категория:</strong> ${a.category || 'без категории'}</p>
               <small><span class="like-icon" style="font-size:1.1rem; font-family: 'Segoe UI', Arial, sans-serif; font-variant-emoji: text; color:${liked ? '#FF0000' : '#888'};">${likeIcon}</span> ${a.likesCount || 0}</small>
             </div>
           `;
-    }).join('')}
+        }).join('')}
       </div>
       <div style="margin-top:30px;"><button id="backToMainBtn" class="btn-primary">На главную</button></div>
     `;
     pageContainer.innerHTML = html;
 
+    // ---- Обработчики редактирования ----
     if (isOwnProfile) {
+      const editBtn = document.getElementById('editProfileBtn');
+      const editForm = document.getElementById('editProfileForm');
+      const saveBtn = document.getElementById('saveProfileBtn');
+      const cancelBtn = document.getElementById('cancelEditBtn');
+      const firstNameInput = document.getElementById('editFirstName');
+      const lastNameInput = document.getElementById('editLastName');
+      const classNumberInput = document.getElementById('editClassNumber');
+      const classLetterInput = document.getElementById('editClassLetter');
+      const birthInput = document.getElementById('editBirthDate');
+
+      if (editBtn) {
+        editBtn.addEventListener('click', () => {
+          editForm.style.display = editForm.style.display === 'block' ? 'none' : 'block';
+        });
+      }
+      if (cancelBtn) {
+        cancelBtn.addEventListener('click', () => {
+          editForm.style.display = 'none';
+        });
+      }
+      if (saveBtn) {
+        saveBtn.addEventListener('click', async () => {
+          const firstName = firstNameInput.value.trim();
+          const lastName = lastNameInput.value.trim();
+          const classNumber = classNumberInput.value.trim();
+          let classLetter = classLetterInput.value.trim();
+
+          if (!firstName || !lastName || !classNumber || !classLetter) {
+            alert('Имя, фамилия, номер и буква класса обязательны для заполнения');
+            return;
+          }
+
+          classLetter = classLetter.toUpperCase();
+          if (!validateRussianLetter(classLetter)) {
+            alert('Буква класса должна быть русской (например, А, Б, В)');
+            return;
+          }
+
+          const birthDate = birthInput.value;
+
+          await updateUserProfile({
+            firstName,
+            lastName,
+            classNumber: parseInt(classNumber),
+            classLetter,
+            birthDate: birthDate || null
+          });
+          editForm.style.display = 'none';
+        });
+      }
+
+      // Обработчики для добавления достижения
       const showAddBtn = document.getElementById('showAddAchievementBtn');
       const addFormEl = document.getElementById('addAchievementForm');
       const submitBtn = document.getElementById('submitAchievementBtn');
-      const cancelBtn = document.getElementById('cancelAddAchievementBtn');
+      const cancelAddBtn = document.getElementById('cancelAddAchievementBtn');
 
       if (showAddBtn) {
         showAddBtn.addEventListener('click', () => {
@@ -607,8 +801,8 @@ async function showUserProfile(uid) {
           }
         });
       }
-      if (cancelBtn) {
-        cancelBtn.addEventListener('click', () => {
+      if (cancelAddBtn) {
+        cancelAddBtn.addEventListener('click', () => {
           addFormEl.style.display = 'none';
           document.getElementById('achTitle').value = '';
           document.getElementById('achDescription').value = '';
@@ -616,6 +810,7 @@ async function showUserProfile(uid) {
       }
     }
 
+    // Обработчики сортировки
     document.getElementById('sortDateBtn')?.addEventListener('click', () => {
       achievements.sort((a, b) => (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0));
       renderAchievementsList(achievements);
@@ -667,7 +862,7 @@ async function showTopAchievements() {
         if (!userSnap.empty) {
           const userData = userSnap.docs[0].data();
           const name = userData.fullName || userData.firstName || 'Неизвестно';
-          const cls = userData.class ? ` (${userData.class})` : '';
+          const cls = userData.classLetter ? ` (${getClassDisplayWithQuotes(userData)})` : '';
           authorCache[userId] = name + cls;
           return authorCache[userId];
         }
@@ -743,12 +938,12 @@ async function showStatistics() {
   });
 
   document.getElementById('getStatBtn').addEventListener('click', async () => {
-    const className = document.getElementById('statClass').value;
-    const userEmail = document.getElementById('statUserEmail').value;
+    const className = document.getElementById('statClass').value.trim();
+    const userEmail = document.getElementById('statUserEmail').value.trim();
     const month = document.getElementById('statMonth').value;
     if (!month) { alert('Выберите месяц'); return; }
     const [year, monthNum] = month.split('-');
-    const start = new Date(year, monthNum - 1, 1);
+    const start = new Date(year, monthNum-1, 1);
     const end = new Date(year, monthNum, 0);
 
     try {
@@ -763,7 +958,7 @@ async function showStatistics() {
       });
 
       if (className) {
-        const usersSnap = await getDocs(query(collection(db, 'users'), where('class', '==', className)));
+        const usersSnap = await getDocs(query(collection(db, 'users'), where('classDisplay', '==', className)));
         const userIds = usersSnap.docs.map(d => d.data().uid);
         achievements = achievements.filter(a => userIds.includes(a.userId));
       }

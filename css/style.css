@@ -331,3 +331,7 @@ body {
   font-family: "Segoe UI", Arial, sans-serif !important;
   font-variant-emoji: text !important;
 }
+
+#showStatisticsLink {
+  display: none !important;
+}
